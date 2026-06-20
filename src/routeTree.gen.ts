@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ThreadRouteImport } from './routes/thread'
+import { Route as ReviewRouteImport } from './routes/review'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as BlogRouteImport } from './routes/blog'
 import { Route as IndexRouteImport } from './routes/index'
@@ -17,6 +18,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const ThreadRoute = ThreadRouteImport.update({
   id: '/thread',
   path: '/thread',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReviewRoute = ReviewRouteImport.update({
+  id: '/review',
+  path: '/review',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChatRoute = ChatRouteImport.update({
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/blog': typeof BlogRoute
   '/chat': typeof ChatRoute
+  '/review': typeof ReviewRoute
   '/thread': typeof ThreadRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/blog': typeof BlogRoute
   '/chat': typeof ChatRoute
+  '/review': typeof ReviewRoute
   '/thread': typeof ThreadRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,22 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/blog': typeof BlogRoute
   '/chat': typeof ChatRoute
+  '/review': typeof ReviewRoute
   '/thread': typeof ThreadRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/blog' | '/chat' | '/thread'
+  fullPaths: '/' | '/blog' | '/chat' | '/review' | '/thread'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/blog' | '/chat' | '/thread'
-  id: '__root__' | '/' | '/blog' | '/chat' | '/thread'
+  to: '/' | '/blog' | '/chat' | '/review' | '/thread'
+  id: '__root__' | '/' | '/blog' | '/chat' | '/review' | '/thread'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BlogRoute: typeof BlogRoute
   ChatRoute: typeof ChatRoute
+  ReviewRoute: typeof ReviewRoute
   ThreadRoute: typeof ThreadRoute
 }
 
@@ -76,6 +86,13 @@ declare module '@tanstack/react-router' {
       path: '/thread'
       fullPath: '/thread'
       preLoaderRoute: typeof ThreadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/review': {
+      id: '/review'
+      path: '/review'
+      fullPath: '/review'
+      preLoaderRoute: typeof ReviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/chat': {
@@ -106,6 +123,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BlogRoute: BlogRoute,
   ChatRoute: ChatRoute,
+  ReviewRoute: ReviewRoute,
   ThreadRoute: ThreadRoute,
 }
 export const routeTree = rootRouteImport
