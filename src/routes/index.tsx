@@ -156,6 +156,61 @@ function Home() {
   );
 }
 
+function HomeView({ onStart }: { onStart: (q: string) => void }) {
+  const [q, setQ] = useState("");
+  return (
+    <main className="mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-2xl flex-col items-center justify-center px-6 animate-in fade-in duration-500">
+      <div className="mb-8 text-center">
+        <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
+          Ask something worth trusting.
+        </h1>
+        <p className="mt-3 text-base text-muted-foreground">
+          AI made learning faster. Sourcerer makes it trustworthy.
+        </p>
+      </div>
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          onStart(q);
+        }}
+        className="w-full"
+      >
+        <div className="flex items-center gap-2 rounded-2xl border border-border bg-white px-4 py-3 shadow-md focus-within:border-foreground/20 focus-within:shadow-lg">
+          <Search className="h-4 w-4 text-muted-foreground" />
+          <input
+            autoFocus
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Ask anything — Sourcerer will draft an answer and have it reviewed."
+            className="flex-1 bg-transparent text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
+          />
+          <button
+            type="submit"
+            disabled={!q.trim()}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-foreground text-background transition hover:opacity-90 disabled:opacity-30"
+            aria-label="Start chat"
+          >
+            <ArrowUp className="h-4 w-4" />
+          </button>
+        </div>
+      </form>
+
+      <div className="mt-6 flex flex-wrap justify-center gap-2">
+        {SUGGESTIONS.map((s) => (
+          <button
+            key={s}
+            onClick={() => onStart(s)}
+            className="rounded-full border border-border bg-white px-3 py-1.5 text-xs text-muted-foreground transition hover:border-foreground/20 hover:text-foreground"
+          >
+            {s}
+          </button>
+        ))}
+      </div>
+    </main>
+  );
+}
+
 function ChatView({
   messages,
   draft,
