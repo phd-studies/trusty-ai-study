@@ -38,12 +38,11 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-type AppState = "chat" | "loading" | "workspace";
+type AppState = "home" | "chat" | "loading" | "workspace";
 
 type ChatMsg = { role: "user" | "ai"; text: string };
 
-const INITIAL_CHAT: ChatMsg[] = [
-  { role: "user", text: "Can you explain how State Space Models compare to Transformers?" },
+const SSM_SEED: ChatMsg[] = [
   {
     role: "ai",
     text: "Sure! Transformers use self-attention, which lets every token attend to every other token — powerful, but it scales as O(N²) with sequence length.",
@@ -60,9 +59,16 @@ const INITIAL_CHAT: ChatMsg[] = [
   },
 ];
 
+const SUGGESTIONS = [
+  "Explain how State Space Models compare to Transformers",
+  "What caused the 2008 financial crisis?",
+  "How do mRNA vaccines actually work?",
+  "Is intermittent fasting backed by evidence?",
+];
+
 function Home() {
-  const [state, setState] = useState<AppState>("chat");
-  const [messages, setMessages] = useState<ChatMsg[]>(INITIAL_CHAT);
+  const [state, setState] = useState<AppState>("home");
+  const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [draft, setDraft] = useState("");
   const [statusIdx, setStatusIdx] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -100,9 +106,28 @@ function Home() {
     }, 600);
   };
 
+  const startFromHome = (text: string) => {
+    const q = text.trim();
+    if (!q) return;
+    const isSSM = /ssm|state space|mamba|transformer/i.test(q);
+    const seed: ChatMsg[] = isSSM
+      ? [{ role: "user", text: q }, ...SSM_SEED]
+      : [
+          { role: "user", text: q },
+          {
+            role: "ai",
+            text: "Great question. Let me start with the high-level picture, and we can dig into the contested parts together — then I'll have a panel of critics review my answer.",
+          },
+        ];
+    setMessages(seed);
+    setDraft("");
+    setState("chat");
+  };
+
   return (
     <div className="min-h-screen bg-zinc-50 text-foreground">
       <TopBar />
+      {state === "home" && <HomeView onStart={startFromHome} />}
       {state === "chat" && (
         <ChatView
           messages={messages}
@@ -110,12 +135,79 @@ function Home() {
           setDraft={setDraft}
           onSend={sendMessage}
           onConvert={() => setState("loading")}
+          onHome={() => {
+            setMessages([]);
+            setState("home");
+          }}
           scrollRef={scrollRef}
         />
       )}
       {state === "loading" && <LoadingView statusIdx={statusIdx} />}
-      {state === "workspace" && <WorkspaceView onBack={() => setState("chat")} />}
+      {state === "workspace" && (
+        <WorkspaceView
+          onBack={() => setState("chat")}
+          onHome={() => {
+            setMessages([]);
+            setState("home");
+          }}
+        />
+      )}
     </div>
+  );
+}
+
+function HomeView({ onStart }: { onStart: (q: string) => void }) {
+  const [q, setQ] = useState("");
+  return (
+    <main className="mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-2xl flex-col items-center justify-center px-6 animate-in fade-in duration-500">
+      <div className="mb-8 text-center">
+        <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
+          Ask something worth trusting.
+        </h1>
+        <p className="mt-3 text-base text-muted-foreground">
+          AI made learning faster. Sourcerer makes it trustworthy.
+        </p>
+      </div>
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          onStart(q);
+        }}
+        className="w-full"
+      >
+        <div className="flex items-center gap-2 rounded-2xl border border-border bg-white px-4 py-3 shadow-md focus-within:border-foreground/20 focus-within:shadow-lg">
+          <Search className="h-4 w-4 text-muted-foreground" />
+          <input
+            autoFocus
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Ask anything — Sourcerer will draft an answer and have it reviewed."
+            className="flex-1 bg-transparent text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
+          />
+          <button
+            type="submit"
+            disabled={!q.trim()}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-foreground text-background transition hover:opacity-90 disabled:opacity-30"
+            aria-label="Start chat"
+          >
+            <ArrowUp className="h-4 w-4" />
+          </button>
+        </div>
+      </form>
+
+      <div className="mt-6 flex flex-wrap justify-center gap-2">
+        {SUGGESTIONS.map((s) => (
+          <button
+            key={s}
+            onClick={() => onStart(s)}
+            className="rounded-full border border-border bg-white px-3 py-1.5 text-xs text-muted-foreground transition hover:border-foreground/20 hover:text-foreground"
+          >
+            {s}
+          </button>
+        ))}
+      </div>
+    </main>
   );
 }
 
@@ -125,6 +217,7 @@ function ChatView({
   setDraft,
   onSend,
   onConvert,
+  onHome,
   scrollRef,
 }: {
   messages: ChatMsg[];
@@ -132,11 +225,20 @@ function ChatView({
   setDraft: (v: string) => void;
   onSend: (text: string) => void;
   onConvert: () => void;
+  onHome: () => void;
   scrollRef: React.RefObject<HTMLDivElement | null>;
 }) {
   return (
     <div className="animate-in fade-in duration-300">
       <main className="mx-auto flex h-[calc(100vh-3.5rem)] max-w-3xl flex-col px-6">
+        <div className="pt-4">
+          <button
+            onClick={onHome}
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition hover:text-foreground"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" /> New question
+          </button>
+        </div>
         <div ref={scrollRef} className="flex-1 space-y-5 overflow-y-auto py-8">
           {messages.map((m, i) => (
             <div
@@ -235,19 +337,27 @@ function LoadingView({ statusIdx }: { statusIdx: number }) {
   );
 }
 
-function WorkspaceView({ onBack }: { onBack: () => void }) {
+function WorkspaceView({ onBack, onHome }: { onBack: () => void; onHome: () => void }) {
   const { answer, comments, confidence, confidenceLevel } = mockResult;
   const trustPct = Math.round(confidence * 100);
 
   return (
     <div className="animate-in fade-in duration-500">
       <div className="mx-auto max-w-7xl px-6 pb-20 pt-6">
-        <button
-          onClick={onBack}
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition hover:text-foreground"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" /> Back to Chat
-        </button>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={onBack}
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition hover:text-foreground"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" /> Back to Chat
+          </button>
+          <button
+            onClick={onHome}
+            className="text-sm text-muted-foreground transition hover:text-foreground"
+          >
+            New question
+          </button>
+        </div>
 
         <div className="mt-4 grid grid-cols-1 gap-8 lg:grid-cols-[7fr_3fr]">
           <article className="rounded-2xl border border-border bg-white p-8 shadow-sm sm:p-10">
