@@ -38,12 +38,11 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-type AppState = "chat" | "loading" | "workspace";
+type AppState = "home" | "chat" | "loading" | "workspace";
 
 type ChatMsg = { role: "user" | "ai"; text: string };
 
-const INITIAL_CHAT: ChatMsg[] = [
-  { role: "user", text: "Can you explain how State Space Models compare to Transformers?" },
+const SSM_SEED: ChatMsg[] = [
   {
     role: "ai",
     text: "Sure! Transformers use self-attention, which lets every token attend to every other token — powerful, but it scales as O(N²) with sequence length.",
@@ -60,9 +59,16 @@ const INITIAL_CHAT: ChatMsg[] = [
   },
 ];
 
+const SUGGESTIONS = [
+  "Explain how State Space Models compare to Transformers",
+  "What caused the 2008 financial crisis?",
+  "How do mRNA vaccines actually work?",
+  "Is intermittent fasting backed by evidence?",
+];
+
 function Home() {
-  const [state, setState] = useState<AppState>("chat");
-  const [messages, setMessages] = useState<ChatMsg[]>(INITIAL_CHAT);
+  const [state, setState] = useState<AppState>("home");
+  const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [draft, setDraft] = useState("");
   const [statusIdx, setStatusIdx] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -100,9 +106,28 @@ function Home() {
     }, 600);
   };
 
+  const startFromHome = (text: string) => {
+    const q = text.trim();
+    if (!q) return;
+    const isSSM = /ssm|state space|mamba|transformer/i.test(q);
+    const seed: ChatMsg[] = isSSM
+      ? [{ role: "user", text: q }, ...SSM_SEED]
+      : [
+          { role: "user", text: q },
+          {
+            role: "ai",
+            text: "Great question. Let me start with the high-level picture, and we can dig into the contested parts together — then I'll have a panel of critics review my answer.",
+          },
+        ];
+    setMessages(seed);
+    setDraft("");
+    setState("chat");
+  };
+
   return (
     <div className="min-h-screen bg-zinc-50 text-foreground">
       <TopBar />
+      {state === "home" && <HomeView onStart={startFromHome} />}
       {state === "chat" && (
         <ChatView
           messages={messages}
@@ -110,11 +135,23 @@ function Home() {
           setDraft={setDraft}
           onSend={sendMessage}
           onConvert={() => setState("loading")}
+          onHome={() => {
+            setMessages([]);
+            setState("home");
+          }}
           scrollRef={scrollRef}
         />
       )}
       {state === "loading" && <LoadingView statusIdx={statusIdx} />}
-      {state === "workspace" && <WorkspaceView onBack={() => setState("chat")} />}
+      {state === "workspace" && (
+        <WorkspaceView
+          onBack={() => setState("chat")}
+          onHome={() => {
+            setMessages([]);
+            setState("home");
+          }}
+        />
+      )}
     </div>
   );
 }
