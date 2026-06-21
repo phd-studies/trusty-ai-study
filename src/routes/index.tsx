@@ -282,19 +282,27 @@ function LoadingView({ statusIdx }: { statusIdx: number }) {
   );
 }
 
-function WorkspaceView({ onBack }: { onBack: () => void }) {
+function WorkspaceView({ onBack, onHome }: { onBack: () => void; onHome: () => void }) {
   const { answer, comments, confidence, confidenceLevel } = mockResult;
   const trustPct = Math.round(confidence * 100);
 
   return (
     <div className="animate-in fade-in duration-500">
       <div className="mx-auto max-w-7xl px-6 pb-20 pt-6">
-        <button
-          onClick={onBack}
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition hover:text-foreground"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" /> Back to Chat
-        </button>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={onBack}
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition hover:text-foreground"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" /> Back to Chat
+          </button>
+          <button
+            onClick={onHome}
+            className="text-sm text-muted-foreground transition hover:text-foreground"
+          >
+            New question
+          </button>
+        </div>
 
         <div className="mt-4 grid grid-cols-1 gap-8 lg:grid-cols-[7fr_3fr]">
           <article className="rounded-2xl border border-border bg-white p-8 shadow-sm sm:p-10">
