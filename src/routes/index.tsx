@@ -162,6 +162,7 @@ function ChatView({
   setDraft,
   onSend,
   onConvert,
+  onHome,
   scrollRef,
 }: {
   messages: ChatMsg[];
@@ -169,11 +170,20 @@ function ChatView({
   setDraft: (v: string) => void;
   onSend: (text: string) => void;
   onConvert: () => void;
+  onHome: () => void;
   scrollRef: React.RefObject<HTMLDivElement | null>;
 }) {
   return (
     <div className="animate-in fade-in duration-300">
       <main className="mx-auto flex h-[calc(100vh-3.5rem)] max-w-3xl flex-col px-6">
+        <div className="pt-4">
+          <button
+            onClick={onHome}
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition hover:text-foreground"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" /> New question
+          </button>
+        </div>
         <div ref={scrollRef} className="flex-1 space-y-5 overflow-y-auto py-8">
           {messages.map((m, i) => (
             <div
