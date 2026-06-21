@@ -1,149 +1,153 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Link } from "@tanstack/react-router";
-import { TopNav } from "@/components/trust/TopNav";
-import { PERSONA_LIST } from "@/mock/trustStudyData";
-import { PersonaAvatar } from "@/components/trust/PersonaAvatar";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { ArrowRight, MessagesSquare, FileText, ShieldCheck, Sparkles } from "lucide-react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { TopBar } from "@/components/sourcerer/TopBar";
+import { ArrowUp, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "TrustStudy — Make AI learning trustworthy" },
+      { title: "Sourcerer — AI you can trust" },
       {
         name: "description",
         content:
-          "Chat with an AI tutor, turn the chat into a blog post, then let other AI models and humans fact-check, debate, and improve it.",
+          "Ask anything. Sourcerer drafts an answer, then has other AI models fact-check, debate, and improve it.",
       },
-      { property: "og:title", content: "TrustStudy — Make AI learning trustworthy" },
+      { property: "og:title", content: "Sourcerer" },
       {
         property: "og:description",
-        content:
-          "AI made learning faster. Now we need to make it trustworthy.",
+        content: "AI made learning faster. Now we need to make it trustworthy.",
       },
     ],
   }),
-  component: Index,
+  component: Home,
 });
 
-function Index() {
+const SUGGESTIONS = [
+  "Explain recursion in programming",
+  "How does mRNA vaccine technology work?",
+  "What caused the 2008 financial crisis?",
+  "Compare React Server Components vs SSR",
+];
+
+const STATUSES = [
+  "Drafting answer…",
+  "Critics reviewing claims…",
+  "Verifying web sources…",
+];
+
+function Home() {
+  const navigate = useNavigate();
+  const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [statusIdx, setStatusIdx] = useState(0);
+
+  useEffect(() => {
+    if (!loading) return;
+    const t = setInterval(() => setStatusIdx((i) => i + 1), 900);
+    return () => clearInterval(t);
+  }, [loading]);
+
+  useEffect(() => {
+    if (loading && statusIdx >= STATUSES.length) {
+      navigate({ to: "/result", search: { q: query } });
+    }
+  }, [statusIdx, loading, navigate, query]);
+
+  const submit = (text: string) => {
+    if (!text.trim() || loading) return;
+    setQuery(text);
+    setStatusIdx(0);
+    setLoading(true);
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      <TopNav />
-
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 -z-10 opacity-[0.5]"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 20% 0%, oklch(0.92 0.08 280 / 0.6), transparent 50%), radial-gradient(circle at 80% 30%, oklch(0.92 0.08 200 / 0.5), transparent 45%)",
-          }}
-        />
-        <div className="mx-auto max-w-5xl px-6 pb-24 pt-24 text-center">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground">
-            <Sparkles className="h-3 w-3 text-primary" />
-            A new layer between you and the model
-          </span>
-          <h1 className="mt-6 font-display text-5xl leading-[1.05] text-foreground sm:text-7xl">
-            AI made learning <em className="text-primary not-italic">faster.</em>
-            <br />
-            Now we need to make it <em className="text-primary">trustworthy.</em>
-          </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-            TrustStudy lets you chat with an AI tutor, turn that chat into a blog post, and then
-            invite other AI models — and real humans — to critique, fact-check, debate, and improve
-            it.
-          </p>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Button asChild size="lg" className="gap-2">
-              <Link to="/chat">
-                Try the demo <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="outline">
-              <Link to="/review">See a reviewed post</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* How it works */}
-      <section className="mx-auto max-w-6xl px-6 pb-20">
-        <div className="grid gap-4 md:grid-cols-3">
-          {[
-            {
-              icon: MessagesSquare,
-              n: "01",
-              title: "Chat to learn",
-              body: "Ask an AI tutor anything. It walks you through the topic step by step.",
-            },
-            {
-              icon: FileText,
-              n: "02",
-              title: "Turn it into a post",
-              body: "Generate a clean blog post from the conversation in one click.",
-            },
-            {
-              icon: ShieldCheck,
-              n: "03",
-              title: "Get it reviewed",
-              body: "Multiple AIs and humans critique each paragraph — verified, disputed, or hallucinated.",
-            },
-          ].map((s) => (
-            <Card key={s.n} className="p-6">
-              <div className="flex items-center justify-between">
-                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                  <s.icon className="h-5 w-5" />
-                </span>
-                <span className="font-display text-2xl text-muted-foreground/50">{s.n}</span>
-              </div>
-              <h3 className="mt-4 font-display text-2xl text-foreground">{s.title}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{s.body}</p>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      {/* Personas */}
-      <section className="mx-auto max-w-6xl px-6 pb-24">
-        <div className="mb-6 flex items-end justify-between">
-          <div>
-            <h2 className="font-display text-3xl text-foreground">Meet the reviewers</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Six AI personas, each with a job. Mix and match per post.
+    <div className="min-h-screen bg-zinc-50 text-foreground">
+      <TopBar />
+      <main className="mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-3xl flex-col items-center justify-center px-6 pb-20">
+        {!loading ? (
+          <>
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-border bg-white px-3 py-1 text-xs text-muted-foreground shadow-sm">
+              <Sparkles className="h-3 w-3" />
+              AI made learning faster. Now we make it trustworthy.
+            </div>
+            <h1 className="text-center text-5xl font-semibold tracking-tight text-foreground sm:text-6xl">
+              What do you want to learn?
+            </h1>
+            <p className="mt-3 text-center text-base text-muted-foreground">
+              Ask anything. A panel of AI reviewers will critique the answer.
             </p>
-          </div>
-          <Link
-            to="/thread"
-            className="hidden text-sm font-medium text-primary hover:underline sm:inline"
-          >
-            See them in action →
-          </Link>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {PERSONA_LIST.map((p) => (
-            <Card key={p.id} className="flex items-start gap-3 p-4">
-              <PersonaAvatar id={p.id} size="md" />
-              <div className="min-w-0">
-                <div className="flex items-baseline gap-2">
-                  <span className="font-medium text-foreground">{p.name}</span>
-                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                    {p.model}
-                  </span>
-                </div>
-                <p className="mt-0.5 text-sm text-muted-foreground">{p.tagline}</p>
-              </div>
-            </Card>
-          ))}
-        </div>
-      </section>
 
-      <footer className="border-t border-border/60 py-8 text-center text-xs text-muted-foreground">
-        TrustStudy · A mock-first design prototype
-      </footer>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                submit(query);
+              }}
+              className="mt-10 w-full"
+            >
+              <div className="flex items-center gap-2 rounded-2xl border border-border bg-white px-4 py-3 shadow-md transition focus-within:border-foreground/20 focus-within:shadow-lg">
+                <input
+                  autoFocus
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Ask Sourcerer…"
+                  className="flex-1 bg-transparent text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  disabled={!query.trim()}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-foreground text-background transition hover:opacity-90 disabled:opacity-30"
+                  aria-label="Submit"
+                >
+                  <ArrowUp className="h-4 w-4" />
+                </button>
+              </div>
+            </form>
+
+            <div className="mt-5 flex flex-wrap justify-center gap-2">
+              {SUGGESTIONS.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => submit(s)}
+                  className="rounded-full border border-border bg-white px-3.5 py-1.5 text-xs text-muted-foreground shadow-sm transition hover:border-foreground/20 hover:text-foreground"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </>
+        ) : (
+          <LoadingState statusIdx={Math.min(statusIdx, STATUSES.length - 1)} query={query} />
+        )}
+      </main>
+    </div>
+  );
+}
+
+function LoadingState({ statusIdx, query }: { statusIdx: number; query: string }) {
+  return (
+    <div className="w-full max-w-2xl">
+      <div className="mb-6 rounded-2xl border border-border bg-white px-4 py-3 shadow-sm">
+        <div className="text-xs uppercase tracking-wide text-muted-foreground">Question</div>
+        <div className="mt-1 text-base text-foreground">{query}</div>
+      </div>
+
+      <div className="space-y-3">
+        <div className="h-3 w-2/3 animate-pulse rounded-full bg-zinc-200" />
+        <div className="h-3 w-full animate-pulse rounded-full bg-zinc-200" />
+        <div className="h-3 w-11/12 animate-pulse rounded-full bg-zinc-200" />
+        <div className="h-3 w-9/12 animate-pulse rounded-full bg-zinc-200" />
+        <div className="h-3 w-10/12 animate-pulse rounded-full bg-zinc-200" />
+      </div>
+
+      <div className="mt-8 flex items-center justify-center gap-3 text-sm text-muted-foreground">
+        <span className="relative inline-flex h-2 w-2">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-foreground opacity-40" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-foreground" />
+        </span>
+        <span key={statusIdx} className="animate-in fade-in duration-300">
+          {STATUSES[statusIdx]}
+        </span>
+      </div>
     </div>
   );
 }
