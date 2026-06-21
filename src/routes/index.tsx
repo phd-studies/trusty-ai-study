@@ -132,7 +132,7 @@ function ChatView({
   setDraft: (v: string) => void;
   onSend: (text: string) => void;
   onConvert: () => void;
-  scrollRef: React.RefObject<HTMLDivElement>;
+  scrollRef: React.RefObject<HTMLDivElement | null>;
 }) {
   return (
     <div className="animate-in fade-in duration-300">
