@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { TopBar } from "@/components/sourcerer/TopBar";
 import { ArrowUp, Sparkles } from "lucide-react";
+import { PIPELINE_STAGES } from "@/mock/mockData";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -23,16 +24,10 @@ export const Route = createFileRoute("/")({
 });
 
 const SUGGESTIONS = [
+  "Explain how SSMs compare to Transformers",
   "Explain recursion in programming",
   "How does mRNA vaccine technology work?",
   "What caused the 2008 financial crisis?",
-  "Compare React Server Components vs SSR",
-];
-
-const STATUSES = [
-  "Drafting answer…",
-  "Critics reviewing claims…",
-  "Verifying web sources…",
 ];
 
 function Home() {
@@ -43,15 +38,18 @@ function Home() {
 
   useEffect(() => {
     if (!loading) return;
-    const t = setInterval(() => setStatusIdx((i) => i + 1), 900);
-    return () => clearInterval(t);
-  }, [loading]);
-
-  useEffect(() => {
-    if (loading && statusIdx >= STATUSES.length) {
+    const interval = setInterval(
+      () => setStatusIdx((i) => Math.min(i + 1, PIPELINE_STAGES.length - 1)),
+      1500,
+    );
+    const done = setTimeout(() => {
       navigate({ to: "/result", search: { q: query } });
-    }
-  }, [statusIdx, loading, navigate, query]);
+    }, 5000);
+    return () => {
+      clearInterval(interval);
+      clearTimeout(done);
+    };
+  }, [loading]);
 
   const submit = (text: string) => {
     if (!text.trim() || loading) return;
@@ -116,7 +114,7 @@ function Home() {
             </div>
           </>
         ) : (
-          <LoadingState statusIdx={Math.min(statusIdx, STATUSES.length - 1)} query={query} />
+          <LoadingState statusIdx={statusIdx} query={query} />
         )}
       </main>
     </div>
@@ -145,7 +143,7 @@ function LoadingState({ statusIdx, query }: { statusIdx: number; query: string }
           <span className="relative inline-flex h-2 w-2 rounded-full bg-foreground" />
         </span>
         <span key={statusIdx} className="animate-in fade-in duration-300">
-          {STATUSES[statusIdx]}
+          {PIPELINE_STAGES[statusIdx]}
         </span>
       </div>
     </div>
